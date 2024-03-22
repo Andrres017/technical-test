@@ -1,12 +1,19 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/andrres017/technical-test/database"
 	"github.com/andrres017/technical-test/models"
 )
 
 // CreateChallenge crea un nuevo desafío en la base de datos.
 func CreateChallenge(challenge models.Challenge) (models.Challenge, error) {
+	// Verifica que el campo 'Name' no esté vacío
+	if challenge.Name == "" {
+		return models.Challenge{}, errors.New("the 'Name' field is required")
+	}
+
 	result := database.DB.Create(&challenge)
 	return challenge, result.Error
 }
@@ -43,6 +50,16 @@ func UpdateChallenge(challenge models.Challenge, id uint) (models.Challenge, err
 
 // DeleteChallenge elimina un desafío por su ID.
 func DeleteChallenge(id uint) error {
-	result := database.DB.Delete(&models.Challenge{}, id)
-	return result.Error
+	var challenge models.Challenge
+	// Primero, intenta encontrar el Challenge por ID para verificar que exista.
+	if err := database.DB.First(&challenge, id).Error; err != nil {
+		return errors.New("challenge not found")
+	}
+
+	// Si el registro existe, procede con la eliminación.
+	if err := database.DB.Delete(&challenge).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -1,14 +1,24 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/andrres017/technical-test/database"
 	"github.com/andrres017/technical-test/models"
 )
 
 // CreateProgramParticipant crea una nueva asociación de participante de programa en la base de datos.
 func CreateProgramParticipant(pp models.ProgramParticipant) (models.ProgramParticipant, error) {
+	// Asegúrate de que los campos obligatorios estén presentes.
+	if pp.ProgramID == 0 || pp.ParticipantID == 0 {
+		return models.ProgramParticipant{}, errors.New("both ProgramID and ParticipantID are required")
+	}
+
 	result := database.DB.Create(&pp)
-	return pp, result.Error
+	if result.Error != nil {
+		return models.ProgramParticipant{}, result.Error
+	}
+	return pp, nil
 }
 
 // FetchProgramParticipants recupera participantes de programas con paginación de la base de datos.
@@ -47,6 +57,17 @@ func UpdateProgramParticipant(pp models.ProgramParticipant, id uint) (models.Pro
 
 // DeleteProgramParticipant elimina una asociación de participante de programa por su ID.
 func DeleteProgramParticipant(id uint) error {
-	result := database.DB.Delete(&models.ProgramParticipant{}, id)
-	return result.Error
+	var pp models.ProgramParticipant
+	// Primero, intenta encontrar la asociación por el ID proporcionado.
+	result := database.DB.First(&pp, id)
+	if result.Error != nil {
+		return errors.New("program participant not found")
+	}
+
+	// Si el registro existe, procede con la eliminación.
+	if result := database.DB.Delete(&pp); result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }

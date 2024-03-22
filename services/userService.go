@@ -1,12 +1,19 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/andrres017/technical-test/database"
 	"github.com/andrres017/technical-test/models"
 )
 
 // CreateUser crea un nuevo usuario en la base de datos.
 func CreateUser(user models.User) (models.User, error) {
+	// Validación simple para asegurar que el campo 'Name' no esté vacío.
+	if user.Name == "" {
+		return models.User{}, errors.New("the 'Name' field is required and cannot be empty")
+	}
+
 	result := database.DB.Create(&user)
 	return user, result.Error
 }
@@ -53,6 +60,14 @@ func UpdateUser(user models.User, id uint) (models.User, error) {
 
 // DeleteUser elimina un usuario por su ID.
 func DeleteUser(id uint) error {
-	result := database.DB.Delete(&models.User{}, id)
+	var user models.User
+	// Primero, intenta encontrar el usuario por el ID proporcionado.
+	if err := database.DB.First(&user, id).Error; err != nil {
+		// Si el usuario no se encuentra, retorna un error.
+		return errors.New("user not found")
+	}
+
+	// Si el usuario existe, procede con la eliminación.
+	result := database.DB.Delete(&user)
 	return result.Error
 }
