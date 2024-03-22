@@ -12,7 +12,7 @@ func CreateChallenge(challenge models.Challenge) (models.Challenge, error) {
 }
 
 // FetchChallenges recupera desafíos con paginación de la base de datos.
-func FetchChallenges(page int, pageSize int) ([]models.Challenge, int64, error) {
+func FetchChallenges(page, pageSize int) ([]models.Challenge, int64, error) {
 	var challenges []models.Challenge
 	var totalRows int64 = 0
 	offset := (page - 1) * pageSize

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 
 	"github.com/andrres017/technical-test/models"
 	"github.com/andrres017/technical-test/services"
@@ -31,12 +30,8 @@ func cleanJSONInput(input string) string {
 func HandleGPTAutoFill(c echo.Context) error {
 	tables := []string{"Challenge", "Companies", "Program", "User"}
 
-	var wg sync.WaitGroup
-
 	for _, model := range tables {
-		wg.Add(1)
 		go func(model string) {
-			defer wg.Done()
 
 			result, err := GenerateFakeData(model)
 			fmt.Printf("data Generate %s", result)
@@ -110,8 +105,6 @@ func HandleGPTAutoFill(c echo.Context) error {
 			}
 		}(model)
 	}
-
-	wg.Wait()
 	fmt.Println("All data generation and saving complete.")
 
 	return utils.ApiResponse(c, http.StatusOK, "Success", "Fake data generated", nil)
