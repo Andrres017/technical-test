@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/andrres017/technical-test/database"
@@ -22,14 +21,8 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return cv.validator.Struct(i)
 }
 
-func init() {
-	// Carga las variables de entorno desde '.env'.
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
-}
-
 func main() {
+	godotenv.Load()
 	e := echo.New()
 
 	e.Validator = &CustomValidator{validator: validator.New()}
