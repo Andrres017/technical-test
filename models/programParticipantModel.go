@@ -17,3 +17,9 @@ type ProgramParticipant struct {
 	ParticipantID   uint            `json:"participant_id" gorm:"not null"`                     // ID del participante
 	ParticipantType ParticipantType `json:"participant_type" gorm:"type:varchar(100);not null"` // Tipo de participante
 }
+
+type ProgramParticipantDetail struct {
+	ProgramParticipant ProgramParticipant // La asociación de participante de programa original
+	Program            Program            `json:"program"`            // Información del programa asociado
+	ParticipantDetail  interface{}        `json:"participant_detail"` // Detalles específicos del participante
+}

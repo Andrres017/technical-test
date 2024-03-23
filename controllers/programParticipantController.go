@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -17,10 +18,19 @@ func CreateProgramParticipantHandler(c echo.Context) error {
 		return utils.ApiResponse(c, http.StatusBadRequest, "Validation Error", "Invalid data", nil)
 	}
 
-	if !utils.IsParticipantTypeValid(programParticipant.ParticipantType) {
-		return utils.ApiResponse(c, http.StatusBadRequest, "Validation Error", "Invalid participant type", nil)
+	// Verificar la existencia del programa.
+	exists, err := services.CheckProgramExists(programParticipant.ProgramID)
+	if err != nil || !exists {
+		return utils.ApiResponse(c, http.StatusNotFound, "Not Found", "The specified program was not found", nil)
 	}
 
+	// Verificar la existencia del participante basado en el tipo.
+	exists, err = services.CheckParticipantExists(programParticipant.ParticipantID, programParticipant.ParticipantType)
+	if err != nil || !exists {
+		return utils.ApiResponse(c, http.StatusNotFound, "Not Found", fmt.Sprintf("The specified participant with type %s was not found", programParticipant.ParticipantType), nil)
+	}
+
+	// Si todo está en orden, proceder con la creación.
 	createdProgramParticipant, err := services.CreateProgramParticipant(programParticipant)
 	if err != nil {
 		return utils.ApiResponse(c, http.StatusInternalServerError, "Creation Error", "Failed to create program participant", nil)
@@ -60,11 +70,27 @@ func GetProgramParticipantByIDHandler(c echo.Context) error {
 
 // UpdateProgramParticipantHandler updates an existing program participant.
 func UpdateProgramParticipantHandler(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return utils.ApiResponse(c, http.StatusBadRequest, "Validation Error", "Invalid ID format", nil)
+	}
+
 	var programParticipant models.ProgramParticipant
 	if err := c.Bind(&programParticipant); err != nil {
 		return utils.ApiResponse(c, http.StatusBadRequest, "Validation Error", "Invalid data", nil)
 	}
+
+	// Verificar la existencia del programa y del participante.
+	programExists, err := services.CheckProgramExists(programParticipant.ProgramID)
+	if err != nil || !programExists {
+		return utils.ApiResponse(c, http.StatusNotFound, "Not Found", "The specified program was not found", nil)
+	}
+
+	participantExists, err := services.CheckParticipantExists(programParticipant.ParticipantID, programParticipant.ParticipantType)
+	if err != nil || !participantExists {
+		return utils.ApiResponse(c, http.StatusNotFound, "Not Found", "The specified participant was not found", nil)
+	}
+
 	updatedProgramParticipant, err := services.UpdateProgramParticipant(programParticipant, uint(id))
 	if err != nil {
 		return utils.ApiResponse(c, http.StatusInternalServerError, "Update Error", "Failed to update program participant", nil)
